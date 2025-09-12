@@ -1,27 +1,64 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import streamlit as st
+import plotly.express as px
 
-ruta = "https://github.com/VMjavier/claseAnalisisDatos/raw/refs/heads/main/datos_reales.zip"
-df = pd.read_csv(ruta)
+url = 'https://github.com/juliandariogiraldoocampo/ia_taltech/raw/refs/heads/main/fiscalia/datos_generales_ficticios.csv'
+df = pd.read_csv(url, sep=';', encoding='utf-8')
 
-print(df.head())
+st.dataframe(df)
+
+#Crea lista de las columnas que me interasan en su propio orden:
+selected_columns = ['FECHA_HECHOS', 'DELITO', 'ETAPA', 'FISCAL_ASIGNADO', 'DEPARTAMENTO', 'MUNICIPIO_HECHOS']
+#Actualizar el dtaframe -df- con las columnas de interes ordendas por fecha y reseteo de indice:
+df = df[selected_columns].sort_values(by='FECHA_HECHOS', ascending=True). reset_index(drop=True)
+
+#Convertir fecha object a fecha
+df['FECHA_HECHOS'] = pd.to_datetime(df['FECHA_HECHOS'], errors='coerce')
+
+df_serie_tiempo = df.copy()
+#Extraigo solo la fecha sin hora
+df['FECHA_HECHOS'] = df['FECHA_HECHOS'].dt.date
+st.dataframe(df)
+
+#Cálculo de los municipio con mas delitos
+#.upper() para poner en mayuscula
+max_municipio = df ['MUNICIPIO_HECHOS'].value_counts().index[0].upper()
+st.write(max_municipio)
+
+max_cantidad_municipio = df ['MUNICIPIO_HECHOS'].value_counts().iloc[0]
+#st.write(f'## Cantidad de Eventos: {max_cantidad_municipio}')
 
 
-n = 10 # Número de variables más comunes a mostrar
-columna = "Crime" # Cambia esto por la columna que desees analizar
+#CONSTRUIR LA PÁGINA
+st.set_page_config(page_title="Dashboard de Delitos - Fiscalía", layout="centered")
+#st.header("Dashboard de Delitos - Fiscalía")
+st.dataframe(df)
 
-topN = df[columna].value_counts().nlargest(n).index
-plt.figure(figsize=(10,6))
-sns.countplot(data=df[df[columna].isin(topN)], 
-              x=columna, 
-              order=topN, 
-              palette="tab10")
+st.write(f"## Municipio con más delitos: {max_municipio} con {max_cantidad_municipio} reportes")
 
-plt.title("Top n tipos de crimen", fontsize=14)#<-- Cambia el título según la columna
-plt.xlabel("Tipo de crimen") #<-- Cambia la etiqueta según la columna
-plt.ylabel("Número de casos") #<-- Cambia la etiqueta según la columna
-plt.xticks(rotation=30)
-plt.tight_layout()
-plt.savefig("img/graficoHurto.png", dpi=300, bbox_inches="tight")
-plt.show()
+#st.subheader("Tipo de Delito")
+#delitos = df['DELITO'].value_counts()
+#st.bar_chart(delitos)
+
+#CALCULO DE ETAPA MAS RECURRENTE- MAS VECES SE PRESENTA
+etapa_mas_frecuente= df['ETAPA'].value_counts().index[0]
+cant_etapa_mas_frecuente = df['ETAPA'].value_counts().iloc[0]
+st.write(f"## Etapa más frecuente: {etapa_mas_frecuente} con {cant_etapa_mas_frecuente} reportes")
+st.header("Tipo de Delito")
+delitos = df['DELITO'].value_counts()
+st.bar_chart(delitos)
+
+Departamento_mas_frecuente = df['DEPARTAMENTO'].value_counts()
+Departamentos_con_mas_casos = df['DEPARTAMENTO'].value_counts().iloc[0]
+st.write(Departamentos_con_mas_casos)
+
+st.header("Departamentos con más casos")
+departamento = df['DEPARTAMENTO'].value_counts()
+st.bar_chart(departamento)
+
+st.header('Distribucion por Departamento')
+fig= px.pie(
+values=Departamento_mas_frecuente.values,
+names=Departamento_mas_frecuente.index
+)
+st.plotly_chart(fig)
