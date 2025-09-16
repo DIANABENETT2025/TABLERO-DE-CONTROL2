@@ -48,7 +48,8 @@ st.markdown(
 
 
 )
-#Para alargar la imagen
+############################################Para alargar la imagen
+
 st.image('img/encabezado.jpg',use_container_width=True)
 
 
@@ -82,7 +83,7 @@ st.plotly_chart(fig)
 
 # Grafico de barras apiladas
 fig.update_traces(textposition='outside', textinfo='percent+label')
-fig.update_layout(showlegend=False, height=400)
+fig.update_layout(showlegend=False, height=300)
 st.plotly_chart(fig)
 
 df_delitos = df.groupby(['DEPARTAMENTO', 'DELITO']).size().reset_index(name='conteo')
@@ -126,9 +127,75 @@ with col2:
              border:2px solid #5176A6;
              border-radius: 10px;
              padding: 10px;
-             text-align: center'>Delitos Reportados:<br> {max_cantidad_municipio} delitos.</h3><br>""",unsafe_allow_html=True)
+             text-align: center'>Delitos Reportados:<br> {max_cantidad_municipio} DELITOS.</h3><br>""",unsafe_allow_html=True)
 
 
 
+#TARJETA 3
+with col3:
+    st.markdown (f"""<h3 style=
+             'color:#black;
+             background-color:#5E92BF;
+             border:2px solid #5176A6;
+             border-radius: 10px;
+             padding: 10px;
+             text-align: center'>Etapa mas Recurrente:<br> {etapa_mas_frecuente}</h3><br>""",unsafe_allow_html=True)
 
+
+#TARJETA 4
+with col4:
+    st.markdown (f"""<h3 style=
+             'color:#black;
+             background-color:#5E92BF;
+             border:2px solid #5176A6;
+             border-radius: 10px;
+             padding: 10px;
+             text-align: center'>Procesos en esta Etapa :<br> {cant_etapa_mas_frecuente}</h3><br>""",unsafe_allow_html=True)
+
+col5, col6 = st.columns(2)
+
+with col5:
+    st.subheader('Tipo Delitos')
+    tipo_delitos = df['DELITO'].value_counts()
+    st.bar_chart(tipo_delitos)
+
+with col6:
+    st.subheader('Distribucion por Departamentos')
+    departamento = df['DEPARTAMENTO'].value_counts()
+    fig = px.pie(
+        names=departamento.index,
+        values=departamento.values
+    )
+    fig.update_traces(textposition='outside', textinfo='percent+label')
+    fig.update_layout(showlegend=False, height=350)
+    st.plotly_chart(fig, key='torta_departamentos')
+
+    #############Seleccion de dato para poder visualizar
+    cols_grafico = ['DELITO', 'ETAPA', 'FISCAL_ASIGNADO', 'DEPARTAMENTO', 'MUNICIPIO_HECHOS']
+    df_grafico = df[cols_grafico]
+
+    st.subheader("seleccione dato a visualizar")
+    variable = st.selectbox(
+        'Seleccione la variable para el analisis',
+        options = df_grafico.columns
+        )
+    
+# st.subheader('tipo delito)
+
+grafico = df_grafico[variable].value_counts()
+st.bar_chart(grafico)
+
+if st.checkbox('Mostrar Matriz de Datos'):
+    st.subheader('Matriz de Datos')
+    st.dataframe(df_grafico)
+
+#CONSULTA POR FISCAL ASIGNADO
+st.header("Consulta por Fiscal Asignado")
+fiscal_consulta= st.selectbox(
+    'seleccione el fiscal a consultar:',
+    options=df['FISCAL_ASIGNADO'].unique()
+)
+
+df_fiscal = df[df['FISCAL_ASIGNADO'] == fiscal_consulta]
+st.dataframe(df_fiscal)
 
